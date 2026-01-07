@@ -35,15 +35,48 @@ Provide a HubSpot Marketplace app that allows tournament administrators on Start
 
 ## 3. HubSpot Marketplace App Requirements
 
+### App Architecture
+
+- **Embedded App Model**: HubSpot Marketplace apps are embedded within the HubSpot interface using an iframe
+- **App URL**: Must be configured in HubSpot Developer Portal - this is where HubSpot loads your React frontend
+- **HTTPS Requirement**: App URL must use HTTPS in production (HubSpot security requirement)
+- **CORS Configuration**: Frontend must allow requests from HubSpot's domain for embedded context
+
+### OAuth Installation Flow
+
 - Must support OAuth 2.0 installation for HubSpot accounts
 - App must request scopes:
   - `crm.objects.contacts.read`
   - `crm.objects.contacts.write`
-- After installation, HubSpot provides:
-  - Hub ID
-  - Authorization code for backend token exchange
-- Tokens stored in Supabase and linked to Hub ID
-- App is embedded inside HubSpot, providing in-app access to tournament sync features
+- Installation process:
+  1. User installs app from HubSpot Marketplace
+  2. HubSpot redirects to OAuth authorization page
+  3. User grants requested permissions
+  4. HubSpot redirects to configured callback URL with:
+     - Authorization code
+     - Hub ID (unique identifier for the HubSpot account)
+  5. Backend exchanges authorization code for access and refresh tokens
+  6. Tokens stored in Supabase and linked to Hub ID
+  7. App becomes accessible within HubSpot interface
+
+### Embedded App Context
+
+- **Hub ID Access**: Hub ID is provided via URL parameters or HubSpot's Context API when app loads in iframe
+- **Context API**: HubSpot provides JavaScript SDK to access installation context (hub_id, user info, etc.)
+- **PostMessage Communication**: HubSpot and embedded app can communicate securely via postMessage API
+- **Design Guidelines**: App UI should follow HubSpot design guidelines for consistent user experience
+
+### Marketplace Listing Requirements
+
+- **App Listing**: Must create listing in HubSpot Developer Portal with:
+  - App name, description, company information
+  - App icon (800x800 pixels)
+  - Demo video and screenshots
+  - Pricing information
+  - Support contact details
+- **Setup Guide**: Must provide publicly accessible setup guide (not behind paywall)
+- **Minimum Installations**: Requires at least 3 active installations in different HubSpot accounts before marketplace approval
+- **Review Process**: HubSpot Ecosystem Quality team reviews app (typically 10 business days)
 
 ---
 
@@ -182,9 +215,17 @@ query FetchParticipants($slug: String!, $page: Int!) {
 
 - **Stack:** React + TypeScript embedded in HubSpot Marketplace App
 
+### Embedded App Considerations
+
+- **Iframe Context**: App runs inside HubSpot iframe - must handle cross-origin communication
+- **Hub ID Extraction**: Extract hub_id from URL parameters or HubSpot Context API on app load
+- **HubSpot SDK**: May use `@hubspot/api-client` or HubSpot's JavaScript SDK to access context
+- **Responsive Design**: UI must work within iframe constraints and HubSpot's layout
+- **HTTPS Requirement**: Frontend must be served over HTTPS in production
+
 ### UI Components
 
-- HubSpot OAuth install
+- HubSpot OAuth install (handled automatically during marketplace installation)
 - Start.gg connect button
 - Tournament selection dropdown
 - Sync button + progress indicator
@@ -192,17 +233,37 @@ query FetchParticipants($slug: String!, $page: Int!) {
 
 ### Communication
 
-- Axios POST/GET to Railway backend
-- Session Management: JWT stored in HttpOnly cookies
+- **Backend API**: Axios POST/GET to Railway backend
+- **Session Management**: JWT stored in HttpOnly cookies (sent automatically with credentials)
+- **Hub ID Context**: Pass hub_id to backend for token lookup (extracted from HubSpot context)
+- **Error Handling**: Display user-friendly error messages for API failures
 
 ---
 
 ## 9. Deployment
 
-- **Backend:** Railway Node.js + Express
-- **Frontend:** React embedded in HubSpot Marketplace
+### Backend Deployment
+
+- **Platform:** Railway Node.js + Express
 - **Environment Variables:** Railway secrets for HubSpot & Start.gg client IDs/secrets, Supabase credentials
-- **Hosting:** Railway handles server deployment, HTTPS, and environment management
+- **HTTPS:** Railway provides automatic HTTPS for backend API
+- **OAuth Redirect URIs:** Must be updated to production Railway URL in both HubSpot and Start.gg
+
+### Frontend Deployment
+
+- **Options:**
+  - **HubSpot Hosting**: HubSpot can host embedded apps (configure App URL in Developer Portal)
+  - **Railway**: Deploy as separate service with static file serving
+  - **Static Hosting**: Deploy to Vercel, Netlify, AWS S3+CloudFront, etc.
+- **HTTPS Requirement:** Frontend must use HTTPS in production (required for HubSpot iframe embedding)
+- **CORS Configuration:** Backend must allow requests from frontend domain
+- **App URL Configuration:** Update App URL in HubSpot Developer Portal to point to production frontend
+
+### Environment Management
+
+- **Development vs Production:** Use separate OAuth applications and Supabase projects for each environment
+- **Secrets Management:** Never commit secrets to version control, use Railway's environment variable management
+- **Configuration:** All environment-specific values (URLs, OAuth credentials) must be configured per environment
 
 ---
 
