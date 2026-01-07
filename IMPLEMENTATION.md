@@ -38,6 +38,13 @@ Before beginning development, ensure you have the following software installed o
    - A modern code editor like VS Code is recommended for development
    - Provides syntax highlighting, debugging tools, and extensions
 
+5. **HubSpot CLI**
+   - The official command-line tool for building HubSpot Marketplace apps
+   - Install globally using npm after Node.js is installed
+   - Used for creating app projects, configuring OAuth, managing app settings, and local development
+   - Must authenticate with your HubSpot Developer Account before use
+   - Provides local development server and testing tools
+
 ### Required Accounts
 
 You'll need to create accounts with the following services before starting development:
@@ -55,9 +62,15 @@ You'll need to create accounts with the following services before starting devel
 3. **HubSpot Developer Account**
    - Required to create and manage your HubSpot Marketplace app
    - Sign up at the HubSpot Developer Portal
-   - This account gives you access to app creation tools and OAuth credentials
+   - This account gives you access to app creation tools, OAuth credentials, and the Developer Portal
+   - Used for authenticating the HubSpot CLI
 
-4. **Start.gg Developer Account**
+4. **HubSpot Account** (separate from Developer Account)
+   - A regular HubSpot account is needed to access the "App Listings" section
+   - This is where you create the marketplace listing (not in the Developer Portal)
+   - Can be the same account as your Developer Account, but accessed through the regular HubSpot interface
+
+5. **Start.gg Developer Account**
    - Required to register your application for Start.gg OAuth
    - Create an account on the Start.gg website and access the developer section
    - You'll need this to obtain OAuth client credentials
@@ -145,15 +158,38 @@ Enable Row Level Security (RLS) on both tables. RLS is a PostgreSQL feature that
 
 Navigate to the HubSpot Developer Portal website and sign up for a developer account. If you already have a HubSpot account, you can use that to access the developer portal. Complete any required account verification steps.
 
-### Step 2: Create a New App
+### Step 2: Install HubSpot CLI
 
-Within your HubSpot Developer Account, navigate to the "Apps" section. Click the button to create a new app. You'll be prompted to provide:
+The HubSpot CLI is the official tool for building and managing HubSpot apps. Install it globally on your development machine using npm. The CLI provides commands for:
+- Creating new app projects with proper structure
+- Configuring OAuth and scopes
+- Running local development server
+- Building and deploying apps
+- Managing app settings
 
-- **App name**: Choose a descriptive name like "Start.gg Email Sync"
-- **App description**: Provide a brief description of what your app does
-- **App logo**: Upload an icon for your app (optional at this stage, but required for marketplace listing)
+After installation, verify the CLI is working by checking its version. You may need to authenticate the CLI with your HubSpot Developer Account.
 
-After providing this information, click to create the app. HubSpot will generate a unique App ID for your application.
+### Step 3: Create a New App Using CLI
+
+Use the HubSpot CLI to create a new app project. The CLI will:
+- Scaffold a new app project with proper directory structure
+- Create configuration files for OAuth, scopes, and app settings
+- Set up the project with necessary dependencies
+- Generate a unique App ID
+
+Navigate to your project directory and run the CLI command to create a new app. The CLI will prompt you for:
+- App name (e.g., "Start.gg Email Sync")
+- App description
+- Other configuration options
+
+The CLI creates the app in your HubSpot Developer Account and sets up the local project structure.
+
+### Step 4: Configure App Settings
+
+After creating the app, configure it using either the CLI or the HubSpot Developer Portal. You'll need to set:
+- **App name and description**: Basic information about your app
+- **App logo**: Upload an icon (800x800 pixels, required for marketplace listing)
+- **App type**: Specify that this is an embedded app
 
 ### Step 3: Configure OAuth Settings
 
@@ -182,10 +218,10 @@ Copy both values and store them securely. You'll add these to your backend envir
 
 ### Step 5: Configure App URLs
 
-Navigate to the "App settings" section. Here you'll configure where your app's frontend is hosted:
+Configure where your app's frontend is hosted. You can do this through the CLI or Developer Portal:
 
 - **App URL**: This is the URL where your React frontend application is accessible
-  - For local development: `http://localhost:3001`
+  - For local development: Use the CLI's local development server
   - For production: Your deployed frontend URL (must be HTTPS)
 
 **Important for Embedded Apps**: HubSpot Marketplace apps are embedded within the HubSpot interface using an iframe. Your frontend must be:
@@ -193,7 +229,22 @@ Navigate to the "App settings" section. Here you'll configure where your app's f
 - Configured to accept requests from HubSpot's domain (CORS settings)
 - Able to communicate with HubSpot's context API to receive installation information
 
-### Step 6: Understand HubSpot App Installation Flow
+The HubSpot CLI can help configure these settings and test your app locally before deployment.
+
+### Step 6: Build Integration Using HubSpot CLI and APIs
+
+Use the HubSpot CLI to build your integration:
+
+- **Project Structure**: CLI creates proper project structure with configuration files
+- **OAuth Configuration**: Configure OAuth settings through CLI or configuration files
+- **Scope Management**: Define required scopes in app configuration
+- **API Integration**: Use HubSpot APIs (Contacts API, etc.) to implement functionality
+- **Local Development**: CLI provides local development server for testing
+- **Build Process**: CLI handles building and preparing your app for deployment
+
+The CLI integrates with HubSpot's APIs and ensures your app follows HubSpot's development standards and best practices.
+
+### Step 7: Understand HubSpot App Installation Flow
 
 When a user installs your app from the HubSpot Marketplace:
 
@@ -207,7 +258,7 @@ When a user installs your app from the HubSpot Marketplace:
 6. Your backend stores these tokens in Supabase, linked to the hub_id
 7. The app is now installed and accessible within HubSpot
 
-### Step 7: Understand Embedded App Context
+### Step 8: Understand Embedded App Context
 
 When your app is embedded in HubSpot, HubSpot provides context information through:
 - URL parameters (hub_id, user information)
@@ -773,13 +824,66 @@ For HubSpot Marketplace apps, the frontend deployment depends on your setup:
 - Ensure HTTPS is enabled
 - Update CORS settings on backend to allow your frontend domain
 
-### Step 5: Configure HubSpot App Settings
+### Step 5: Create App Listing in HubSpot Account
+
+Navigate to your HubSpot account (not Developer Portal) and go to the "App Listings" section. This is where you create the marketplace listing for your app.
+
+**Create New Listing**:
+- Click "Create Listing" and select your app
+- Fill out all required listing information
+
+**Define Features**:
+- Provide detailed descriptions of your app's features and functionality
+- Explain how the app integrates with HubSpot
+- Highlight key benefits for users
+
+**Define Pricing**:
+- Set up pricing plans (free, paid, freemium, etc.)
+- Provide clear pricing information
+- Link to detailed pricing page if needed
+
+**Setup Instructions**:
+- Create comprehensive setup guide that is publicly accessible
+- Include installation steps, configuration instructions, and usage guidelines
+- Ensure guide is not behind a paywall or login requirement
+- The setup guide is critical for marketplace approval
+
+**Other Listing Requirements**:
+- App name, company information, tagline
+- App icon (800x800 pixels)
+- Demo video and screenshots showcasing functionality
+- Support contact information and resources
+- Testing information for HubSpot's review team
+
+### Step 6: Ensure Marketplace Listing Requirements Are Met
+
+Before submitting, verify your app meets all marketplace listing requirements:
+
+- **Functionality**: App works as described and provides value
+- **Setup Guide**: Publicly accessible, comprehensive, and up-to-date
+- **Documentation**: All features are documented
+- **Pricing**: Clear and consistent pricing information
+- **Support**: Accessible support channels for users
+- **Minimum Installations**: At least 3 active installations in different HubSpot accounts
+- **Quality Standards**: App meets HubSpot's quality and security standards
+
+### Step 7: Submit App Listing for Review
+
+Once all requirements are met:
+
+- Review all listing information for accuracy
+- Submit the app listing for review through the App Listings section
+- HubSpot Ecosystem Quality team will review (typically 10 business days for initial review)
+- Be prepared to respond to feedback and make necessary adjustments
+- The entire review process should not exceed 60 days
+
+### Step 8: Configure HubSpot App Settings (Developer Portal)
 
 In your HubSpot Developer Portal:
 
 - Update App URL to your production frontend URL
 - Ensure all OAuth settings are correct
-- Verify app is ready for marketplace submission
+- Verify app configuration matches your listing information
 
 ### Step 6: Verify Production Deployment
 

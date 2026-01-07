@@ -35,6 +35,14 @@ Provide a HubSpot Marketplace app that allows tournament administrators on Start
 
 ## 3. HubSpot Marketplace App Requirements
 
+### App Development Process
+
+- **Developer Account**: Must have a HubSpot Developer Account to create and manage apps
+- **HubSpot CLI**: Use HubSpot CLI to scaffold, build, and manage your app project
+- **App Structure**: CLI creates proper project structure with configuration files for OAuth, scopes, and app settings
+- **Local Development**: CLI provides local development server and testing tools
+- **App Configuration**: Configure OAuth settings, scopes, and app URLs through CLI or Developer Portal
+
 ### App Architecture
 
 - **Embedded App Model**: HubSpot Marketplace apps are embedded within the HubSpot interface using an iframe
@@ -68,15 +76,23 @@ Provide a HubSpot Marketplace app that allows tournament administrators on Start
 
 ### Marketplace Listing Requirements
 
-- **App Listing**: Must create listing in HubSpot Developer Portal with:
+- **App Listing Creation**: Create listing in your HubSpot account's "App Listings" section (not Developer Portal)
+- **Listing Information Required**:
   - App name, description, company information
   - App icon (800x800 pixels)
   - Demo video and screenshots
-  - Pricing information
+  - Features and functionality descriptions
+  - Pricing information and plans
+  - Setup instructions (publicly accessible, not behind paywall)
   - Support contact details
-- **Setup Guide**: Must provide publicly accessible setup guide (not behind paywall)
+- **Setup Guide Requirements**: Must provide comprehensive, publicly accessible setup guide that includes:
+  - Installation steps
+  - Configuration instructions
+  - Usage guidelines
+  - Uninstallation procedures
 - **Minimum Installations**: Requires at least 3 active installations in different HubSpot accounts before marketplace approval
-- **Review Process**: HubSpot Ecosystem Quality team reviews app (typically 10 business days)
+- **Review Process**: Submit listing for review by HubSpot Ecosystem Quality team (typically 10 business days for initial review)
+- **Compliance**: App must meet all marketplace listing requirements before submission
 
 ---
 
