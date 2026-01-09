@@ -9,7 +9,10 @@ function getSupabaseClient() {
     const schema = process.env.SUPABASE_SCHEMA || 'ggsynced';
 
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase credentials');
+      const missing = [];
+      if (!supabaseUrl) missing.push('SUPABASE_URL');
+      if (!supabaseKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+      throw new Error(`Missing Supabase credentials: ${missing.join(', ')}`);
     }
 
     supabaseClient = createClient(supabaseUrl, supabaseKey, {
