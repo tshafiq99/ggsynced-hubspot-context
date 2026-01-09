@@ -1,12 +1,20 @@
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Get the directory of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load .env.local before any other imports
+dotenv.config({ path: join(__dirname, '.env.local') });
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import startggRoutes from './routes/startgg.js';
 import hubspotRoutes from './routes/hubspot.js';
 import syncRoutes from './routes/sync.js';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
