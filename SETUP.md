@@ -75,6 +75,9 @@ CREATE SCHEMA IF NOT EXISTS ggsynced;
 
 ### HubSpot OAuth App
 
+**📖 For detailed step-by-step instructions, see [HUBSPOT_OAUTH_SETUP.md](./HUBSPOT_OAUTH_SETUP.md)**
+
+Quick setup:
 1. Go to [HubSpot Developer Portal](https://developers.hubspot.com)
 2. Create a new app
 3. Configure OAuth:
@@ -100,11 +103,16 @@ CREATE SCHEMA IF NOT EXISTS ggsynced;
 
 ## 3. Backend Setup (Railway)
 
-### Create Railway Project
+**📖 For detailed step-by-step instructions, see [RAILWAY_SETUP.md](./RAILWAY_SETUP.md)**
+
+### Quick Setup
 
 1. Go to [Railway Dashboard](https://railway.app)
 2. Create a new project
 3. Deploy from GitHub (or create a new service)
+4. Set environment variables (see below)
+5. Get your Railway deployment URL
+6. Update OAuth redirect URIs
 
 ### Backend Code Structure
 

@@ -1,0 +1,27 @@
+{
+  "name": "ggsynced-railway",
+  "version": "1.0.0",
+  "description": "Backend API for Start.gg to HubSpot email sync",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "hubspot",
+    "startgg",
+    "oauth",
+    "sync"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "@supabase/supabase-js": "^2.39.0",
+    "graphql-request": "^6.1.0",
+    "graphql": "^16.8.1"
+  }
+}
