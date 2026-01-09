@@ -1,20 +1,8 @@
-# Start.gg → HubSpot Email Sync MVP
-
-## Definitive Technical Architecture — HubSpot Marketplace + Tournament Admin Use Case
-
----
+# Start.gg → HubSpot Email Sync
 
 ## 1. Objective
 
-Provide a HubSpot Marketplace app that allows tournament administrators on Start.gg to manually sync participant emails into HubSpot Contacts.
-
-### Scope
-
-- HubSpot Marketplace app with OAuth installation
-- Manual sync triggered by user
-- Email-only field
-- No persistent participant storage beyond OAuth tokens
-- Minimal UI embedded in HubSpot
+Sync participant emails from Start.gg tournaments to HubSpot Contacts via a one-time manual sync.
 
 ---
 
@@ -22,137 +10,117 @@ Provide a HubSpot Marketplace app that allows tournament administrators on Start
 
 | Layer | Technology | Role |
 |-------|-----------|------|
-| Frontend | React + TypeScript | Embedded HubSpot app UI for OAuth flows, tournament selection, and sync status |
-| Backend | Node.js + Express | API endpoints for orchestrating Start.gg & HubSpot calls, token refresh, batching logic |
-| Database / Token Storage | Supabase (Postgres) | Secure storage of OAuth tokens for Start.gg and HubSpot accounts |
-| Deployment | Railway | Host backend (Node.js + Express), manage environment variables and secrets |
-| HTTP Client | Axios | Perform REST API calls to HubSpot Contacts API |
-| GraphQL Client | graphql-request | Query Start.gg GraphQL API for tournaments and participants |
-| Authentication | JWT stored in HttpOnly cookies | Authenticate HubSpot-embedded frontend sessions to backend |
-| Logging | Winston | Log backend events, errors, and sync results |
+| Frontend | TypeScript | Web app deployed on Netlify |
+| Backend API | Node.js + Express | API endpoints on Railway |
+| Database | Supabase (Postgres) | OAuth token storage |
+| HTTP Client | Native fetch API | REST API calls to HubSpot Contacts API |
+| GraphQL Client | graphql-request | Query Start.gg GraphQL API |
 
 ---
 
-## 3. HubSpot Marketplace App Requirements
+## 3. OAuth Setup
 
-### App Development Process
+### HubSpot OAuth
 
-- **Developer Account**: Must have a HubSpot Developer Account to create and manage apps
-- **HubSpot CLI**: Use HubSpot CLI to scaffold, build, and manage your app project
-- **App Structure**: CLI creates proper project structure with configuration files for OAuth, scopes, and app settings
-- **Local Development**: CLI provides local development server and testing tools
-- **App Configuration**: Configure OAuth settings, scopes, and app URLs through CLI or Developer Portal
-
-### App Architecture
-
-- **Embedded App Model**: HubSpot Marketplace apps are embedded within the HubSpot interface using an iframe
-- **App URL**: Must be configured in HubSpot Developer Portal - this is where HubSpot loads your React frontend
-- **HTTPS Requirement**: App URL must use HTTPS in production (HubSpot security requirement)
-- **CORS Configuration**: Frontend must allow requests from HubSpot's domain for embedded context
-
-### OAuth Installation Flow
-
-- Must support OAuth 2.0 installation for HubSpot accounts
-- App must request scopes:
+- **Scopes Required:**
   - `crm.objects.contacts.read`
   - `crm.objects.contacts.write`
-- Installation process:
-  1. User installs app from HubSpot Marketplace
-  2. HubSpot redirects to OAuth authorization page
-  3. User grants requested permissions
-  4. HubSpot redirects to configured callback URL with:
-     - Authorization code
-     - Hub ID (unique identifier for the HubSpot account)
-  5. Backend exchanges authorization code for access and refresh tokens
-  6. Tokens stored in Supabase and linked to Hub ID
-  7. App becomes accessible within HubSpot interface
+- **Flow:**
+  1. Frontend redirects user to HubSpot authorization page
+  2. User authorizes and grants permissions
+  3. HubSpot redirects to Railway callback URL with authorization code
+  4. Railway backend exchanges authorization code for tokens using:
+     - Client ID (stored in Railway env vars)
+     - Client Secret (stored in Railway env vars)
+  5. Access token + refresh token stored in Supabase
+  6. Railway uses access token for subsequent HubSpot API calls
+  7. When token expires, Railway uses refresh token to get new access token
 
-### Embedded App Context
+### Start.gg OAuth
 
-- **Hub ID Access**: Hub ID is provided via URL parameters or HubSpot's Context API when app loads in iframe
-- **Context API**: HubSpot provides JavaScript SDK to access installation context (hub_id, user info, etc.)
-- **PostMessage Communication**: HubSpot and embedded app can communicate securely via postMessage API
-- **Design Guidelines**: App UI should follow HubSpot design guidelines for consistent user experience
+- **Scopes Required:**
+  - `user.identity`
+  - `user.email`
+  - `tournament.manager`
+- **Flow:**
+  1. Frontend redirects user to Start.gg authorization page
+  2. User authorizes and grants permissions
+  3. Start.gg redirects to Railway callback URL with authorization code
+  4. Railway backend exchanges authorization code for tokens using:
+     - Client ID (stored in Railway env vars)
+     - Client Secret (stored in Railway env vars)
+  5. Access token + refresh token stored in Supabase
+  6. Railway uses access token for subsequent Start.gg GraphQL API calls
+  7. When token expires, Railway uses refresh token to get new access token
 
-### Marketplace Listing Requirements
+### Authentication Credentials
 
-- **App Listing Creation**: Create listing in your HubSpot account's "App Listings" section (not Developer Portal)
-- **Listing Information Required**:
-  - App name, description, company information
-  - App icon (800x800 pixels)
-  - Demo video and screenshots
-  - Features and functionality descriptions
-  - Pricing information and plans
-  - Setup instructions (publicly accessible, not behind paywall)
-  - Support contact details
-- **Setup Guide Requirements**: Must provide comprehensive, publicly accessible setup guide that includes:
-  - Installation steps
-  - Configuration instructions
-  - Usage guidelines
-  - Uninstallation procedures
-- **Minimum Installations**: Requires at least 3 active installations in different HubSpot accounts before marketplace approval
-- **Review Process**: Submit listing for review by HubSpot Ecosystem Quality team (typically 10 business days for initial review)
-- **Compliance**: App must meet all marketplace listing requirements before submission
-
----
-
-## 4. Start.gg OAuth
-
-### Scopes Required for Admin Access
-
-- `user.identity`
-- `user.email`
-- `tournament.manager`
-
-**Purpose:** Fetch tournaments managed by the authenticated user and retrieve participant emails
-
-### OAuth Flow
-
-1. Redirect user to Start.gg authorization page
-2. Exchange authorization code for access + refresh tokens
-3. Store tokens in Supabase linked to HubSpot account
-4. Only tournament admins can sync participants using this flow
+- **Railway Environment Variables:**
+  - `HUBSPOT_CLIENT_ID` - HubSpot OAuth app client ID
+  - `HUBSPOT_CLIENT_SECRET` - HubSpot OAuth app client secret
+  - `STARTGG_CLIENT_ID` - Start.gg OAuth app client ID
+  - `STARTGG_CLIENT_SECRET` - Start.gg OAuth app client secret
+- **Token Exchange:** Railway uses client ID + secret to exchange authorization codes for access/refresh tokens
+- **API Calls:** Railway uses stored access tokens (from Supabase) to authenticate API requests to HubSpot and Start.gg
 
 ---
 
-## 5. Core Workflow
+## 4. Core Workflow
 
 ```
-[HubSpot Embedded React App]
+[TypeScript Frontend on Netlify]
    ↓
-1. Install HubSpot Marketplace App
+1. User connects HubSpot account (OAuth)
    ↓
-2. HubSpot OAuth: request crm.objects.contacts.read/write
+2. User connects Start.gg account (OAuth)
    ↓
-3. Connect Start.gg Account: OAuth (user.identity + user.email + tournament.manager)
+3. Fetch tournaments where user is admin
    ↓
-4. Fetch tournaments managed by the authenticated user
+4. Display tournaments with participants
    ↓
-5. User selects event/tournament
+5. Display HubSpot Contact columns
    ↓
-6. Click "Sync Participants"
+6. User clicks "Sync" button
    ↓
 7. Backend (Railway):
-      • Fetch participants via Start.gg GraphQL (paginated)
-      • Extract emails, deduplicate
-      • Batch upsert into HubSpot Contacts
+      • Fetch participant emails via Start.gg GraphQL
+      • Batch upsert emails into HubSpot Contacts
    ↓
-8. Return sync summary to embedded UI
+8. Display sync summary
 ```
 
 ---
 
-## 6. Backend Endpoints
+## 5. Backend Endpoints
 
-### 6.1 GET /startgg/tournaments
+### GET /auth/hubspot/callback
 
-**Purpose:** List tournaments user can manage
+**Purpose:** Handle HubSpot OAuth callback
 
 **Process:**
+1. Receive authorization code from HubSpot redirect
+2. Exchange code for access + refresh tokens using client ID/secret
+3. Store tokens in Supabase linked to user session
+4. Redirect user back to frontend
 
-1. Retrieve Start.gg token from Supabase
-2. Query GraphQL:
+### GET /auth/startgg/callback
 
+**Purpose:** Handle Start.gg OAuth callback
+
+**Process:**
+1. Receive authorization code from Start.gg redirect
+2. Exchange code for access + refresh tokens using client ID/secret
+3. Store tokens in Supabase linked to user session
+4. Redirect user back to frontend
+
+### GET /startgg/tournaments
+
+**Purpose:** List tournaments where user is admin
+
+**Process:**
+1. Retrieve Start.gg access token from Supabase (using user session)
+2. Use access token to authenticate GraphQL request
+3. Query GraphQL:
 ```graphql
 query ListManagedTournaments {
   currentUser {
@@ -162,19 +130,16 @@ query ListManagedTournaments {
   }
 }
 ```
+3. Return tournament list
 
-3. Return tournament list to frontend
+### GET /startgg/tournaments/:slug/participants
 
-### 6.2 POST /sync/startgg
-
-**Purpose:** Sync participants' emails to HubSpot
+**Purpose:** List participants for a tournament
 
 **Process:**
-
-1. Retrieve Start.gg + HubSpot tokens
-2. Refresh tokens if expired
-3. Fetch participants via paginated GraphQL query:
-
+1. Retrieve Start.gg access token from Supabase (using user session)
+2. Use access token to authenticate GraphQL request
+3. Query GraphQL (paginated):
 ```graphql
 query FetchParticipants($slug: String!, $page: Int!) {
   event(slug: $slug) {
@@ -185,11 +150,30 @@ query FetchParticipants($slug: String!, $page: Int!) {
   }
 }
 ```
+3. Return participants with emails
 
-4. Extract and deduplicate emails
-5. Batch ≤100 emails
-6. Upsert into HubSpot:
+### GET /hubspot/columns
 
+**Purpose:** List HubSpot Contact properties/columns
+
+**Process:**
+1. Retrieve HubSpot access token from Supabase (using user session)
+2. Use access token to authenticate HubSpot API request
+3. Call HubSpot Properties API
+4. Return available Contact properties
+
+### POST /sync
+
+**Purpose:** Sync participant emails to HubSpot
+
+**Process:**
+1. Retrieve Start.gg + HubSpot access tokens from Supabase (using user session)
+2. Refresh tokens if expired (using refresh tokens stored in Supabase)
+3. Use Start.gg access token to authenticate GraphQL requests
+4. Fetch participant emails via Start.gg GraphQL (paginated)
+5. Extract and deduplicate emails
+6. Use HubSpot access token to authenticate API requests
+7. Batch upsert into HubSpot (≤100 per request):
 ```json
 {
   "idProperty": "email",
@@ -198,19 +182,18 @@ query FetchParticipants($slug: String!, $page: Int!) {
   ]
 }
 ```
-
-7. Return sync summary (synced, skipped, errors)
+6. Return sync summary (synced, skipped, errors)
 
 ---
 
-## 7. Supabase Schema
+## 6. Supabase Schema
 
 ### hubspot_accounts
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| hub_id | string | HubSpot account ID |
-| access_token | string | OAuth token |
+| user_id | string | User identifier (session-based) |
+| access_token | string | OAuth access token |
 | refresh_token | string | OAuth refresh token |
 | expires_at | timestamp | Token expiration |
 
@@ -218,117 +201,77 @@ query FetchParticipants($slug: String!, $page: Int!) {
 
 | Field | Type | Purpose |
 |-------|------|---------|
+| user_id | string | User identifier (session-based) |
 | startgg_user_id | string | Start.gg user ID |
-| access_token | string | OAuth token |
+| access_token | string | OAuth access token |
 | refresh_token | string | OAuth refresh token |
 | expires_at | timestamp | Token expiration |
 
-**Note:** No participant data persisted; only OAuth tokens.
+**Note:** Only OAuth tokens stored; no participant data persisted.
 
 ---
 
-## 8. Frontend Implementation
+## 7. Frontend Implementation
 
-- **Stack:** React + TypeScript embedded in HubSpot Marketplace App
-
-### Embedded App Considerations
-
-- **Iframe Context**: App runs inside HubSpot iframe - must handle cross-origin communication
-- **Hub ID Extraction**: Extract hub_id from URL parameters or HubSpot Context API on app load
-- **HubSpot SDK**: May use `@hubspot/api-client` or HubSpot's JavaScript SDK to access context
-- **Responsive Design**: UI must work within iframe constraints and HubSpot's layout
-- **HTTPS Requirement**: Frontend must be served over HTTPS in production
+### Stack
+- TypeScript
+- Deployed on Netlify
 
 ### UI Components
-
-- HubSpot OAuth install (handled automatically during marketplace installation)
-- Start.gg connect button
-- Tournament selection dropdown
-- Sync button + progress indicator
-- Sync result summary (synced/skipped/failed)
+- HubSpot OAuth connect button
+- Start.gg OAuth connect button
+- Tournament list (where user is admin)
+- Participant list with emails
+- HubSpot Contact columns display
+- Sync button
+- Sync result summary
 
 ### Communication
-
-- **Backend API**: Axios POST/GET to Railway backend
-- **Session Management**: JWT stored in HttpOnly cookies (sent automatically with credentials)
-- **Hub ID Context**: Pass hub_id to backend for token lookup (extracted from HubSpot context)
-- **Error Handling**: Display user-friendly error messages for API failures
+- Backend API: HTTP requests to Railway backend
+- Session Management: Simple session/user identifier for token lookup
+- Error Handling: Display user-friendly error messages
 
 ---
 
-## 9. Deployment
+## 8. Deployment
 
-### Backend Deployment
+### Frontend
+- **Platform:** Netlify
+- **HTTPS:** Automatic via Netlify
+- **Environment Variables:** OAuth client IDs, API URLs
 
-- **Platform:** Railway Node.js + Express
-- **Environment Variables:** Railway secrets for HubSpot & Start.gg client IDs/secrets, Supabase credentials
-- **HTTPS:** Railway provides automatic HTTPS for backend API
-- **OAuth Redirect URIs:** Must be updated to production Railway URL in both HubSpot and Start.gg
+### Backend
+- **Platform:** Railway (Node.js + Express)
+- **Environment Variables:** HubSpot & Start.gg client IDs/secrets, Supabase credentials
+- **HTTPS:** Automatic via Railway
+- **OAuth Redirect URIs:** Configured to Railway URL
 
-### Frontend Deployment
-
-- **Options:**
-  - **HubSpot Hosting**: HubSpot can host embedded apps (configure App URL in Developer Portal)
-  - **Railway**: Deploy as separate service with static file serving
-  - **Static Hosting**: Deploy to Vercel, Netlify, AWS S3+CloudFront, etc.
-- **HTTPS Requirement:** Frontend must use HTTPS in production (required for HubSpot iframe embedding)
-- **CORS Configuration:** Backend must allow requests from frontend domain
-- **App URL Configuration:** Update App URL in HubSpot Developer Portal to point to production frontend
-
-### Environment Management
-
-- **Development vs Production:** Use separate OAuth applications and Supabase projects for each environment
-- **Secrets Management:** Never commit secrets to version control, use Railway's environment variable management
-- **Configuration:** All environment-specific values (URLs, OAuth credentials) must be configured per environment
+### Database
+- **Platform:** Supabase
+- **Access:** Backend connects via Supabase client
 
 ---
 
-## 10. Error Handling & Logging
+## 9. Error Handling
 
-- **Backend:** Winston logging
 - **Start.gg:** Handle 403 (unauthorized), missing emails, rate limits
 - **HubSpot:** Handle batch upsert errors, token expiration
-- **UI:** Display detailed sync summary
+- **UI:** Display sync summary with errors
+- **Token Refresh:** Automatic refresh on expiration
 
 ---
 
-## 11. Rate Limiting & Pagination
+## 10. Rate Limiting & Pagination
 
-- **Start.gg:** Handle pagination automatically for large tournaments
+- **Start.gg:** Paginated GraphQL queries for large tournaments
 - **HubSpot:** Batch ≤100 emails per request
 - **Retries:** Exponential backoff on rate limit errors
 
 ---
 
-## 12. Privacy & Security
+## 11. Privacy & Security
 
-- Only emails for tournaments the admin manages are synced
-- No participant data is stored persistently
-- Tokens stored securely in Supabase
-- OAuth scopes limited to minimum required (`user.identity`, `user.email`, `tournament.manager`)
-
----
-
-## 13. Risks & Mitigation
-
-| Risk | Mitigation |
-|------|------------|
-| Missing participant emails | Skip nulls, report in summary |
-| Large tournaments | Paginated GraphQL queries + batch upsert |
-| Token expiration | Implement refresh logic for both Start.gg and HubSpot |
-| API rate limits | Retry/backoff logic |
-| Revoked admin access | Handle 403 gracefully and notify user |
-
----
-
-## 14. Feasibility Verdict
-
-Fully feasible using the selected stack:
-
-- Frontend: React embedded in HubSpot Marketplace
-- Backend: Node.js + Express on Railway
-- Token Storage: Supabase
-- Start.gg GraphQL API with `user.identity`, `user.email`, `tournament.manager` scopes
-- HubSpot Contacts API batch upsert
-- Manual sync only, email-only MVP ensures fast, low-complexity implementation
-
+- Only emails for tournaments where user is admin are synced
+- No participant data stored persistently
+- OAuth tokens stored securely in Supabase
+- Minimal OAuth scopes required
