@@ -1,10 +1,22 @@
+// Helper function to get normalized backend URL
+function getBackendUrl() {
+  let backendUrl;
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    backendUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  } else if (process.env.BACKEND_URL) {
+    backendUrl = process.env.BACKEND_URL;
+  } else {
+    backendUrl = 'http://localhost:3000';
+  }
+  // Remove trailing slash if present
+  return backendUrl.replace(/\/$/, '');
+}
+
 // HubSpot OAuth token exchange
-export async function exchangeHubSpotToken(code) {
+export async function exchangeHubSpotToken(code, redirectUri = null) {
   // Redirect URI should be the backend callback URL
-  const backendUrl = process.env.RAILWAY_PUBLIC_DOMAIN 
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-    : process.env.BACKEND_URL || 'http://localhost:3000';
-  const redirectUri = `${backendUrl}/auth/hubspot/callback`;
+  const backendUrl = getBackendUrl();
+  const finalRedirectUri = redirectUri || `${backendUrl}/auth/hubspot/callback`;
 
   const response = await fetch('https://api.hubapi.com/oauth/v1/token', {
     method: 'POST',
@@ -15,7 +27,7 @@ export async function exchangeHubSpotToken(code) {
       grant_type: 'authorization_code',
       client_id: process.env.HUBSPOT_CLIENT_ID,
       client_secret: process.env.HUBSPOT_CLIENT_SECRET,
-      redirect_uri: redirectUri,
+      redirect_uri: finalRedirectUri,
       code: code,
     }),
   });
@@ -52,12 +64,13 @@ export async function refreshHubSpotToken(refreshToken) {
 }
 
 // Start.gg OAuth token exchange
-export async function exchangeStartGGToken(code) {
+export async function exchangeStartGGToken(code, redirectUri = null) {
   // Redirect URI should be the backend callback URL
-  const backendUrl = process.env.RAILWAY_PUBLIC_DOMAIN 
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-    : process.env.BACKEND_URL || 'http://localhost:3000';
-  const redirectUri = `${backendUrl}/auth/startgg/callback`;
+  // If not provided, construct it from environment variables
+  const backendUrl = getBackendUrl();
+  const finalRedirectUri = redirectUri || `${backendUrl}/auth/startgg/callback`;
+  
+  console.log('Start.gg token exchange - redirect URI:', finalRedirectUri);
   
   const response = await fetch('https://api.start.gg/oauth/token', {
     method: 'POST',
@@ -68,13 +81,14 @@ export async function exchangeStartGGToken(code) {
       grant_type: 'authorization_code',
       client_id: process.env.STARTGG_CLIENT_ID,
       client_secret: process.env.STARTGG_CLIENT_SECRET,
-      redirect_uri: redirectUri,
+      redirect_uri: finalRedirectUri,
       code: code,
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
+    console.error('Start.gg token exchange error:', error);
     throw new Error(`Start.gg token exchange failed: ${error}`);
   }
 

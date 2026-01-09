@@ -7,8 +7,21 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const HUBSPOT_SCOPES = 'crm.objects.contacts.read crm.objects.contacts.write';
 const STARTGG_SCOPES = 'user.identity user.email tournament.manager';
 
+// Helper function to normalize backend URL
+function normalizeBackendUrl(url: string): string {
+  let normalized = url;
+  // Ensure URL has protocol
+  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    normalized = `https://${normalized}`;
+  }
+  // Remove trailing slash
+  normalized = normalized.replace(/\/$/, '');
+  return normalized;
+}
+
 export function connectHubSpot(): void {
-  const redirectUri = `${API_URL}/auth/hubspot/callback`;
+  const backendUrl = normalizeBackendUrl(API_URL);
+  const redirectUri = `${backendUrl}/auth/hubspot/callback`;
   const sessionId = getSessionId();
   const randomState = crypto.randomUUID();
   // Encode session ID and random state together
@@ -26,7 +39,9 @@ export function connectHubSpot(): void {
 }
 
 export function connectStartGG(): void {
-  const redirectUri = `${API_URL}/auth/startgg/callback`;
+  const backendUrl = normalizeBackendUrl(API_URL);
+  const redirectUri = `${backendUrl}/auth/startgg/callback`;
+  
   const sessionId = getSessionId();
   const randomState = crypto.randomUUID();
   // Encode session ID and random state together
