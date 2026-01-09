@@ -1,0 +1,38 @@
+.hubspot-columns {
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+
+.hubspot-columns ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hubspot-columns li {
+  padding: 10px 14px;
+  background: #fafafa;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+}
+
+.hubspot-columns .type {
+  color: #999;
+  font-size: 11px;
+  margin-left: 6px;
+}
+
+.hubspot-columns.loading,
+.hubspot-columns.empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}

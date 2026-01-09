@@ -1,0 +1,21 @@
+.sync-button {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sync-button:hover:not(:disabled) {
+  background: #333;
+}
+
+.sync-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

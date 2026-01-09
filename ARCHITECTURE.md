@@ -188,6 +188,10 @@ query FetchParticipants($slug: String!, $page: Int!) {
 
 ## 6. Supabase Schema
 
+**Schema Name:** `ggsynced`
+
+All tables are created in the `ggsynced` schema. Backend queries should use schema-qualified table names (e.g., `ggsynced.hubspot_accounts`).
+
 ### hubspot_accounts
 
 | Field | Type | Purpose |

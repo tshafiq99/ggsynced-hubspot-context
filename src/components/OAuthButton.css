@@ -1,0 +1,50 @@
+.oauth-button {
+  padding: 10px 20px;
+  font-size: 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 400;
+}
+
+.oauth-button:hover:not(:disabled) {
+  border-color: #999;
+  background: #fafafa;
+}
+
+.oauth-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.oauth-button.connected {
+  background: #1a1a1a;
+  color: white;
+  border-color: #1a1a1a;
+}
+
+.oauth-button.connected:hover:not(:disabled) {
+  background: #333;
+  border-color: #333;
+}
+
+.oauth-button.hubspot {
+  border-color: #ff7a59;
+}
+
+.oauth-button.hubspot:hover:not(:disabled) {
+  border-color: #ff7a59;
+  background: #fff5f3;
+}
+
+.oauth-button.startgg {
+  border-color: #6366f1;
+}
+
+.oauth-button.startgg:hover:not(:disabled) {
+  border-color: #6366f1;
+  background: #f0f0ff;
+}

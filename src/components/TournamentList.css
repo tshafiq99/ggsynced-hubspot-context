@@ -1,0 +1,45 @@
+.tournament-list {
+  width: 100%;
+}
+
+.tournament-list h3 {
+  display: none;
+}
+
+.tournament-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tournament-list li {
+  padding: 14px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 14px;
+  color: #1a1a1a;
+  background: white;
+}
+
+.tournament-list li:hover {
+  border-color: #999;
+  background: #fafafa;
+}
+
+.tournament-list li.selected {
+  background: #1a1a1a;
+  color: white;
+  border-color: #1a1a1a;
+}
+
+.tournament-list.empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
